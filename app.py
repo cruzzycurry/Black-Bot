@@ -10,7 +10,7 @@ app.secret_key = "6312Rosales"  # Replace this with a strong, unique key in prod
 # Discord OAuth2 details
 DISCORD_CLIENT_ID = "1248835438362234952"
 DISCORD_CLIENT_SECRET = "n1-4lGsvHY0uKLY1zQw4zqBSp4CGiCtg"  # Replace with your actual Discord client secret
-DISCORD_REDIRECT_URI = "https://black-bot.onrender.com"  # Update with your Render domain in production
+DISCORD_REDIRECT_URI = "https://black-bot.onrender.com/callback"  # Update with your Render domain in production
 DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize"
 DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token"
 DISCORD_SCOPE = "identify guilds"
