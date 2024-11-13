@@ -1,21 +1,22 @@
 from flask import Flask, redirect, request
 import requests
+import os
 
 app = Flask(__name__)
 
 # Secret key for session management
-app.secret_key = "6312Rosales"
+app.secret_key = "6312Rosales"  # Replace this with a strong, unique key in production
 
-# Discord OAuth2 details (hardcoded for simplicity)
+# Discord OAuth2 details
 DISCORD_CLIENT_ID = "1248835438362234952"
-DISCORD_CLIENT_SECRET = "n1-4lGsvHY0uKLY1zQw4zqBSp4CGiCtg"  # Replace with actual client secret from the Discord Developer Portal
-DISCORD_REDIRECT_URI = "http://localhost:5000/callback"
+DISCORD_CLIENT_SECRET = "n1-4lGsvHY0uKLY1zQw4zqBSp4CGiCtg"  # Replace with your actual Discord client secret
+DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Update with your Render domain in production
 DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize"
 DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token"
 DISCORD_SCOPE = "identify guilds"
 DISCORD_API_BASE = "https://discord.com/api"
 
-# Helper function to exchange code for access token
+# Helper function to exchange authorization code for access token
 def get_token(code):
     data = {
         "client_id": DISCORD_CLIENT_ID,
@@ -83,4 +84,5 @@ def callback():
 
 # Run the app
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
