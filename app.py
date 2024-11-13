@@ -1,20 +1,21 @@
-from flask import Flask, redirect, request, session, url_for, jsonify
+from flask import Flask, redirect, request
 import requests
-import os
 
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # Change this in a production environment
 
-# Discord OAuth2 configuration
-DISCORD_CLIENT_ID = "YOUR_DISCORD_CLIENT_ID"
-DISCORD_CLIENT_SECRET = "YOUR_DISCORD_CLIENT_SECRET"
-DISCORD_REDIRECT_URI = "http://localhost:5000/callback"  # Update with your hosted URL
-DISCORD_API_BASE = "https://discord.com/api"
-DISCORD_OAUTH_URL = "https://discord.com/api/oauth2/authorize"
+# Secret key for session management
+app.secret_key = "6312Rosales"
+
+# Discord OAuth2 details (hardcoded for simplicity)
+DISCORD_CLIENT_ID = "1248835438362234952"
+DISCORD_CLIENT_SECRET = "n1-4lGsvHY0uKLY1zQw4zqBSp4CGiCtg"  # Replace with actual client secret from the Discord Developer Portal
+DISCORD_REDIRECT_URI = "http://localhost:5000/callback"
+DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize"
 DISCORD_TOKEN_URL = "https://discord.com/api/oauth2/token"
 DISCORD_SCOPE = "identify guilds"
+DISCORD_API_BASE = "https://discord.com/api"
 
-# Helper function to get access token
+# Helper function to exchange code for access token
 def get_token(code):
     data = {
         "client_id": DISCORD_CLIENT_ID,
@@ -28,13 +29,13 @@ def get_token(code):
     response = requests.post(DISCORD_TOKEN_URL, data=data, headers=headers)
     return response.json().get("access_token")
 
-# Helper function to get data from Discord API
+# Helper function to fetch data from Discord API using the access token
 def get_discord_user_data(access_token, endpoint):
     headers = {"Authorization": f"Bearer {access_token}"}
     response = requests.get(f"{DISCORD_API_BASE}/{endpoint}", headers=headers)
     return response.json()
 
-# Routes
+# Route to homepage
 @app.route("/")
 def index():
     return """
@@ -42,34 +43,36 @@ def index():
     <a href="/login">Log in with Discord</a>
     """
 
+# Route to initiate login (redirect to Discord OAuth2 page)
 @app.route("/login")
 def login():
-    # Redirect user to Discord's OAuth2 authorization page
     return redirect(
         f"{DISCORD_OAUTH_URL}?client_id={DISCORD_CLIENT_ID}&redirect_uri={DISCORD_REDIRECT_URI}&response_type=code&scope={DISCORD_SCOPE}"
     )
 
+# Callback route for Discord OAuth2
 @app.route("/callback")
 def callback():
-    # Retrieve access token
+    # Retrieve authorization code from query string
     code = request.args.get("code")
+    
+    # Exchange authorization code for access token
     access_token = get_token(code)
+    if not access_token:
+        return "Error retrieving access token"
 
-    # Get user and guild data
+    # Fetch user and guild data
     user_data = get_discord_user_data(access_token, "users/@me")
     guild_data = get_discord_user_data(access_token, "users/@me/guilds")
 
-    # Filter servers where user is an admin or mod
+    # Filter guilds where the user has admin or mod permissions
     mod_guilds = [
         {"name": guild["name"], "id": guild["id"]}
         for guild in guild_data
         if guild["permissions"] & (1 << 3) or guild["permissions"] & (1 << 4)  # Admin or Manage Server
     ]
 
-    # Check if bot is in user's mod servers
-    bot_in_guilds = []  # Populate with IDs of guilds where bot is present
-
-    # Render response
+    # Render response with user and guild information
     return f"""
     <h1>Welcome, {user_data['username']}#{user_data['discriminator']}!</h1>
     <p>Servers where you have admin/mod permissions:</p>
